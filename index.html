@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#FFD66B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Aca Baca"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><link rel="manifest" href="manifest.webmanifest"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#FFD66B"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Aca Baca"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Aca Baca</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap">
@@ -591,10 +591,28 @@ function place(id,slotIdx){
     if(W.slots.indexOf(null)<0){W.done=true;render();say(wordSeq(W.word));return}
     say(sp(b.l));render();
   }else{
-    W.wrong++;rec(b.l,false);
+    W.wrong++;rec(b.l,false);wrongSfx();
     if(W.wrong>=2){var need=W.word[W.slots.indexOf(null)];var h=W.bank.find(function(x){return !x.used&&x.l===need});if(h)W.hint=h.id}
     nope(id);
   }
+}
+function wrongSfx(){
+  if(!S.p.sound)return;
+  stopAudio();
+  ensureCtx().then(function(){
+    if(!ctx)return;
+    var t=ctx.currentTime;
+    [[392,0],[262,0.17]].forEach(function(n){
+      var o=ctx.createOscillator(),g=ctx.createGain(),s=t+n[1];
+      o.type='triangle';
+      o.frequency.setValueAtTime(n[0],s);
+      o.frequency.exponentialRampToValueAtTime(n[0]*0.9,s+0.2);
+      g.gain.setValueAtTime(0.0001,s);
+      g.gain.exponentialRampToValueAtTime(0.28,s+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,s+0.22);
+      o.connect(g);g.connect(ctx.destination);o.start(s);o.stop(s+0.24);
+    });
+  });
 }
 function nope(id){
   var el=document.querySelector('.ltile[data-id="'+id+'"]');
@@ -763,7 +781,7 @@ function blend(v){
 function pick(l,el){
   var R=S.lp;if(R.ok)return;
   if(l===R.t){R.ok=true;rec(l,true);render();say([sp(l),K('pujian-bagus','Bagus!')]);later(function(){newRound();render();later(function(){say(sp(S.lp.t))},300)},2200)}
-  else{rec(R.t,false);el.classList.add('nope');say(sp(R.t));later(function(){el.classList.remove('nope')},400)}
+  else{rec(R.t,false);el.classList.add('nope');wrongSfx();later(function(){say(sp(R.t))},500);later(function(){el.classList.remove('nope')},400)}
 }
 function hlOnly(i){document.querySelectorAll('.w').forEach(function(w,k){w.classList.toggle('hl',k===i)})}
 function readAll(){
